@@ -2,7 +2,11 @@
 Build/
 build/
 cmake-build-*/
-*.cmake
+# Don't exclude CMakeLists.txt, only build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
 
 # Compiled extensions
 *.so
