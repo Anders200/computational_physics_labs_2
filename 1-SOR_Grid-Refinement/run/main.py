@@ -407,6 +407,53 @@ def plot_timing_refinement_vs_direct(final_n=10, omega=1.985, lower_n=5):
     speedup = direct_time_s / cumulative_refine_time_s if cumulative_refine_time_s > 0 else 0
     print(f"Speedup: {speedup:.2f}x")
 
+def test_grid_refinement(final_n=10, lower_n=5, omega=1.985):
+    """Grid refinement test with timing and residual plots."""
+    print(f"--- Grid Refinement Test (2^{lower_n} → 2^{final_n}, ω={omega:.4f}) ---")
+    
+    # Solve with finer logging (log_every=1 for 10x more history)
+    solver = poisson_solver.PoissonSolver2D(final_n, log_every=100, history_stride=50)
+    
+    t0 = time.time()
+    solver.solve_with_refinement(lower_n, max_iters=100000, tol=1e-3, omega=omega)
+    total_time = time.time() - t0
+    
+    res_hist = solver.get_residual_history()
+    en_hist = solver.get_energy_history()
+    
+    # Convert iteration count to time (assume linear time per iteration)
+    iters = np.arange(len(res_hist))
+    times = iters * (total_time / max(len(res_hist), 1))
+    
+    print(f"Converged in {len(res_hist)} steps ({total_time:.3f} s)")
+    print(f"Final residual: {res_hist[-1]:.2e}")
+    print(f"Final energy: {en_hist[-1]:.6f}")
+    print(f"Analytical energy: {S_ANALYTICAL:.6f}")
+    print(f"Energy error: {abs(en_hist[-1] - S_ANALYTICAL):.2e}")
+    
+    # Plot timing vs residual (log-log)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Left: Time vs Residual (log-log)
+    ax1.loglog(times, res_hist, 'b-o', linewidth=1.5, markersize=3, label='Residual')
+    ax1.set_xlabel('Time (s)', fontsize=12)
+    ax1.set_ylabel('Max Residual δ (log)', fontsize=12)
+    ax1.set_title(f'Time vs Residual (2^{lower_n}→2^{final_n})')
+    ax1.grid(True, alpha=0.3, which='both')
+    ax1.legend()
+    
+    # Right: Iteration vs Residual (log-log)
+    ax2.loglog(iters + 1, res_hist, 'r-o', linewidth=1.5, markersize=3, label='Residual')
+    ax2.set_xlabel('Iteration (log)', fontsize=12)
+    ax2.set_ylabel('Max Residual δ (log)', fontsize=12)
+    ax2.set_title(f'Iteration vs Residual (2^{lower_n}→2^{final_n})')
+    ax2.grid(True, alpha=0.3, which='both')
+    ax2.legend()
+    
+    plt.tight_layout()
+    plt.savefig(f"test_grid_refinement_n{final_n}.png", dpi=150)
+    plt.show()
+
 
 if __name__ == "__main__":
     opt_w = 1.985 # found by find_optimal_omega_parallel
@@ -418,5 +465,6 @@ if __name__ == "__main__":
     # compare_convergence_rates(n_power=9)
     # compare_grid_refinement_vs_sor(final_n=10, omega=opt_w, lower_n=5)
     # opt_w = find_optimal_omega_parallel(n_power=10, num_workers=6)
+    test_grid_refinement(final_n=13, lower_n=9, omega=opt_w)
     
     # plot_timing_refinement_vs_direct(final_n=11, omega=opt_w, lower_n=5)
