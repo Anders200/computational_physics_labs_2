@@ -3,6 +3,8 @@ project(itm_solver LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED True)
 
 # ── Python discovery ──────────────────────────────────────────────────────────
 if(NOT DEFINED Python3_EXECUTABLE)
@@ -48,6 +50,25 @@ pybind11_add_module(
     src/itm.cpp
     src/binder.cpp
 )
+
+# ── CPU optimization flags ────────────────────────────────────────────────────
+target_compile_options(itm PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:
+        -O3
+        -march=native
+        -ffast-math
+        -fopenmp
+    >
+)
+
+target_link_options(itm PRIVATE
+    -fopenmp
+)
+
+target_compile_definitions(itm PRIVATE
+    NDEBUG
+)
+
 
 target_include_directories(itm PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include

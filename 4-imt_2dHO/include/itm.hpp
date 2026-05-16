@@ -26,6 +26,10 @@ public:
     const std::vector<double>& get_wavefunction() const { return psi; }
     const std::vector<double>& get_state_energies() const { return state_energies; }
     const std::vector<std::vector<double>>& get_states() const { return found_states; }
+    void set_state_energies(const std::vector<double>& energies) { state_energies = energies; }
+    void set_states(const std::vector<std::vector<double>>& states) { found_states = states; }
+    void clear_states() { found_states.clear(); state_energies.clear(); }
+    size_t num_states() const { return found_states.size(); }
 
     size_t grid_size() const { return N; }
     double grid_dx()   const { return dx; }

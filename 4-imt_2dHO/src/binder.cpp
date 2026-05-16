@@ -41,6 +41,14 @@ PYBIND11_MODULE(itm, m)
              "Converged energies for every state found so far")
         .def("get_states",        &Solver::get_states,
              "All converged wavefunctions (list of flat N×N arrays, row-major)")
+        .def("set_state_energies", &Solver::set_state_energies,
+             "Replace the stored state energies from Python")
+        .def("set_states",        &Solver::set_states,
+             "Replace the stored converged wavefunctions from Python")
+        .def("clear_states",      &Solver::clear_states,
+             "Clear stored energies and wavefunctions")
+        .def("num_states",        &Solver::num_states,
+             "Number of stored states")
         .def("grid_size",         &Solver::grid_size, "N")
         .def("grid_dx",           &Solver::grid_dx,   "Grid spacing dx = 4/N");
 }

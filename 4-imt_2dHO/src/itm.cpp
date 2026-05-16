@@ -22,7 +22,6 @@ Solver::Solver(size_t N,
     if (N < 3)
         throw std::invalid_argument("N must be at least 3");
 
-    // Grid spacing: N * dx = 4  (as specified)
     dx = 4.0 / static_cast<double>(N);
     dy = dx;
 
@@ -80,7 +79,6 @@ void Solver::apply_hamiltonian()
         }
 }
 
-// <E> = Σ_{i,j} ψ(i,j) * Hψ(i,j) * dx * dy
 double Solver::compute_energy() const
 {
     double E = 0.0;
@@ -89,7 +87,6 @@ double Solver::compute_energy() const
     return E * dx * dy;
 }
 
-// Normalize:  ψ /= sqrt( Σ |ψ|² dx dy )
 void Solver::normalize()
 {
     double norm = 0.0;
@@ -136,8 +133,16 @@ void Solver::iterate_one_step()
 std::vector<double> Solver::solve(size_t state_idx)
 {
     std::vector<double> energy_history;
+    const size_t start_state = found_states.size();
 
-    for (size_t state = 0; state <= state_idx; ++state)
+    if (state_idx < start_state)
+    {
+        spdlog::info("Requested state {} already available ({} states loaded)",
+                     state_idx, start_state);
+        return energy_history;
+    }
+
+    for (size_t state = start_state; state <= state_idx; ++state)
     {
         spdlog::info("Solving for state {}...", state);
         energy_history.clear();
