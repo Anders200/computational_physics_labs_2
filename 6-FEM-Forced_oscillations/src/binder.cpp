@@ -1,54 +1,35 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "itm.hpp"
+#include "FEM.hpp"
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(itm, m)
-{
-    m.doc() = "Imaginary Time Method solver for the 2D anisotropic harmonic oscillator";
+PYBIND11_MODULE(FEM, m) {
+    m.doc() = "FEM solver: 2-D Schrödinger eigenvalue problem with forced oscillations";
 
-    py::class_<Solver>(m, "Solver")
-        .def(py::init<size_t, double, double, double, size_t, double>(),
-             py::arg("N")            = 100,
-             py::arg("alpha_factor") = 0.9,
-             py::arg("omega_x")     = 1.0,
-             py::arg("omega_y")     = 2.0,
-             py::arg("max_iter")    = 10000,
-             py::arg("tol")         = 1e-10,
-             R"doc(
-             Parameters
-             ----------
-             N            : grid points per side (N*dx = 4)
-             alpha_factor : multiplier on alpha_c  (0.9 = safe, >1 diverges)
-             omega_x/y    : trap frequencies (atomic units)
-             max_iter     : hard iteration cap
-             tol          : convergence threshold on |ΔE|
-             )doc")
+    py::enum_<BasisType>(m, "BasisType")
+        .value("Bilinear",  BasisType::Bilinear)
+        .value("Quadratic", BasisType::Quadratic)
+        .export_values();
 
-        .def("solve", &Solver::solve,
-             py::arg("state_idx") = 0,
-             R"doc(
-             Compute eigenstates 0 … state_idx via ITM + Gram-Schmidt.
-             Returns the per-iteration energy history of the *last* state solved.
-             )doc")
-
-        .def("get_potential",     &Solver::get_potential,
-             "Flat N×N potential array (row-major)")
-        .def("get_wavefunction",  &Solver::get_wavefunction,
-             "Flat N×N wavefunction of the last converged state (row-major)")
-        .def("get_state_energies",&Solver::get_state_energies,
-             "Converged energies for every state found so far")
-        .def("get_states",        &Solver::get_states,
-             "All converged wavefunctions (list of flat N×N arrays, row-major)")
-        .def("set_state_energies", &Solver::set_state_energies,
-             "Replace the stored state energies from Python")
-        .def("set_states",        &Solver::set_states,
-             "Replace the stored converged wavefunctions from Python")
-        .def("clear_states",      &Solver::clear_states,
-             "Clear stored energies and wavefunctions")
-        .def("num_states",        &Solver::num_states,
-             "Number of stored states")
-        .def("grid_size",         &Solver::grid_size, "N")
-        .def("grid_dx",           &Solver::grid_dx,   "Grid spacing dx = 4/N");
+    py::class_<FEM>(m, "FEM")
+        .def(py::init<double, size_t, double, double, BasisType>(),
+             py::arg("L"), py::arg("N"),
+             py::arg("rc_x") = 0.0, py::arg("rc_y") = 0.0,
+             py::arg("basis") = BasisType::Bilinear)
+        .def("build_mesh", &FEM::build_mesh)
+        .def("assemble_stiffness_matrix", &FEM::assemble_stiffness_matrix)
+        .def("assemble_overlap_matrix", &FEM::assemble_overlap_matrix)
+        .def("apply_bc_eigenvalue", &FEM::apply_bc_eigenvalue)
+        .def("get_num_nodes", &FEM::get_num_nodes)
+        .def("get_csr_row", &FEM::get_csr_row, py::return_value_policy::reference_internal)
+        .def("get_csr_col", &FEM::get_csr_col, py::return_value_policy::reference_internal)
+        .def("get_csr_val", &FEM::get_csr_val, py::return_value_policy::reference_internal)
+        .def("get_overlap_csr_row", &FEM::get_overlap_csr_row, py::return_value_policy::reference_internal)
+        .def("get_overlap_csr_col", &FEM::get_overlap_csr_col, py::return_value_policy::reference_internal)
+        .def("get_overlap_csr_val", &FEM::get_overlap_csr_val, py::return_value_policy::reference_internal)
+        .def("assemble_potential_matrix", &FEM::assemble_potential_matrix, py::arg("eF"))
+        .def("get_potential_csr_row", &FEM::get_potential_csr_row, py::return_value_policy::reference_internal)
+        .def("get_potential_csr_col", &FEM::get_potential_csr_col, py::return_value_policy::reference_internal)
+        .def("get_potential_csr_val", &FEM::get_potential_csr_val, py::return_value_policy::reference_internal);
 }
