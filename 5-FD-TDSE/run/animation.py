@@ -8,8 +8,8 @@ def main():
     # -------------------------------------------------------------------------
     # 1. System Parameters (Scales beautifully to large N now!)
     # -------------------------------------------------------------------------
-    N = 32
-    dt = 0.001
+    N = 100
+    dt = 0.0001
     omega_x = 1.0       
     omega_y = 1.001
     m = 1.0             
@@ -57,7 +57,7 @@ def main():
     sim = TdSE.tdse(N=N, dt=dt, omega_x=omega_x, omega_y=omega_y, m=m)
     sim.set_initial_state(wavefunctions[0].tolist(), wavefunctions[1].tolist(), wavefunctions[2].tolist())
     
-    step_stride = 50
+    step_stride = 500
     num_frames = total_steps // step_stride
 
     print("Preparing 2D Dynamic Animation Canvas...")
@@ -110,6 +110,18 @@ def main():
         blit=True, 
         repeat=False
     )
+
+    from matplotlib.animation import PillowWriter
+
+    writer = PillowWriter(fps=30)
+
+    ani.save(
+        "tdse_evolution.gif",
+        writer=writer,
+        dpi=150
+    )
+
+    print("Saved GIF as tdse_evolution.gif")
     
     plt.tight_layout()
     plt.show()
